@@ -1,6 +1,7 @@
 // prisma/schema.prisma
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // Build for local dev and Render's Linux runtime
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -18,7 +19,7 @@ model User {
   members        GroupMember[]
   messages       Message[]
   groups         Group[]       @relation("GroupCreatedBy")
-  invitesCreated Invite[]      @relation("InvitesCreatedBy") // <-- back-relation added
+  invitesCreated Invite[]      @relation("InvitesCreatedBy")
 
   @@index([createdAt])
 }
@@ -69,7 +70,7 @@ model Invite {
   usesRemaining Int?
   createdAt     DateTime  @default(now())
   group         Group     @relation(fields: [groupId], references: [id])
-  createdBy     User      @relation("InvitesCreatedBy", fields: [createdById], references: [id]) // <-- relation name added
+  createdBy     User      @relation("InvitesCreatedBy", fields: [createdById], references: [id])
 
   @@index([groupId])
   @@index([expiresAt])
