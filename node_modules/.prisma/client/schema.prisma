@@ -1,0 +1,75 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String        @id @default(uuid())
+  email          String?       @unique
+  passwordHash   String?
+  displayName    String
+  createdAt      DateTime      @default(now())
+  members        GroupMember[]
+  messages       Message[]
+  groups         Group[]       @relation("GroupCreatedBy")
+  invitesCreated Invite[]      @relation("InvitesCreatedBy") // <-- back-relation added
+
+  @@index([createdAt])
+}
+
+model Group {
+  id          String        @id @default(uuid())
+  name        String
+  createdById String
+  createdBy   User          @relation("GroupCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime      @default(now())
+  members     GroupMember[]
+  messages    Message[]
+  invites     Invite[]
+
+  @@index([createdAt])
+}
+
+model GroupMember {
+  userId   String
+  groupId  String
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id])
+  group    Group    @relation(fields: [groupId], references: [id])
+
+  @@id([userId, groupId])
+  @@index([groupId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  groupId   String
+  userId    String
+  text      String
+  createdAt DateTime @default(now())
+  group     Group    @relation(fields: [groupId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([groupId, createdAt])
+}
+
+model Invite {
+  id            String    @id @default(uuid())
+  token         String    @unique
+  groupId       String
+  createdById   String
+  expiresAt     DateTime?
+  usesRemaining Int?
+  createdAt     DateTime  @default(now())
+  group         Group     @relation(fields: [groupId], references: [id])
+  createdBy     User      @relation("InvitesCreatedBy", fields: [createdById], references: [id]) // <-- relation name added
+
+  @@index([groupId])
+  @@index([expiresAt])
+}
