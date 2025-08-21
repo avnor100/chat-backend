@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import * as svc from './auth.service.js';
 import { requireAuth } from './auth.middleware.js';
 
 export const authRouter = Router();
 
-authRouter.post('/guest', async (req, res) => {
+authRouter.post('/guest', async (_req, res) => {
   try {
     const { token, user } = await svc.guest();
     res.json({ token, user });
@@ -16,7 +16,9 @@ authRouter.post('/guest', async (req, res) => {
 authRouter.post('/register', async (req, res) => {
   try {
     const { email, password, displayName } = req.body || {};
-    if (!email || !password || !displayName) return res.status(400).json({ error: 'Missing fields' });
+    if (!email || !password || !displayName) {
+      return res.status(400).json({ error: 'Missing fields' });
+    }
     const { token, user } = await svc.register(email, password, displayName);
     res.json({ token, user });
   } catch (e: any) {
@@ -27,7 +29,9 @@ authRouter.post('/register', async (req, res) => {
 authRouter.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body || {};
-    if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Missing fields' });
+    }
     const { token, user } = await svc.login(email, password);
     res.json({ token, user });
   } catch (e: any) {
@@ -35,6 +39,7 @@ authRouter.post('/login', async (req, res) => {
   }
 });
 
-authRouter.get('/me', requireAuth, async (req, res) => {
+// ✅ Loose-typed to avoid TS complaining about req.user
+authRouter.get('/me', requireAuth as any, (req: any, res: Response) => {
   res.json({ user: req.user });
 });
